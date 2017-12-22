@@ -1,0 +1,189 @@
+---
+title: "Linear Regression on CPU-Performance Dataset"
+output: github_document
+author: Bhasheyam Krishnan
+---
+Loading the dataset
+```{r}
+cpu = read.csv(file = "CPUPerformance.csv")
+head(cpu)
+```
+```{r}
+a = c(1,2,3,4,NA)
+b = c(2,3,4,5,6)
+tes = as.data.frame(a)
+tes$b = b
+tes
+```
+
+```{r}
+tes1 = function(x){
+  is.na(x)
+}
+apply(tes,2,tes1)
+```
+
+```{r}
+nacheck = function(x){
+  if (is.numeric(x)){
+    mean(x)
+    }
+  
+}
+
+apply(cpu,2,nacheck)
+sum(is.na(tes))
+```
+
+
+
+```{r}
+cpu[cpu == ""] = NA
+sum(is.na(cpu))
+sum(is.null(cpu))
+
+```
+the dataset has no NA and missing values
+```{r}
+summary(cpu)
+```
+The above is the stat of the datset
+```{r}
+dim(cpu)
+```
+
+
+```{r}
+boxplot(Filter(is.numeric,cpu))
+
+```
+
+From the above we can see almost every features has some outlier
+
+so lets normalize the data see how it works
+
+```{r}
+calculatenorm=function(x){
+  num=x-min(x)
+  denom=max(x)-min(x)
+  return (num/denom)
+}
+
+normalizeset= as.data.frame(lapply(Filter(is.numeric,cpu),calculatenorm))
+normalizeset
+nrow(normalizeset)
+
+```
+
+```{r}
+boxplot(Filter(is.numeric,normalizeset))
+```
+
+```{r}
+summary(normalizeset)
+```
+```{r}
+plot(normalizeset)
+```
+
+```{r}
+normalizeset = normalizeset[normalizeset$CHMAX < 0.50,]
+nrow(normalizeset)
+```
+
+```{r}
+boxplot(normalizeset)
+```
+
+```{r}
+cor(normalizeset)
+```
+
+From the above we can see, we cannot see any feature pair are highly corelated
+```{r}
+plot(normalizeset$MYCT, normalizeset$MMAX)
+```
+
+
+```{r}
+fix(normalizeset)
+```
+
+```{r}
+normalizeset = subset(normalizeset,select = c("MMIN","MMAX" ,"CACH","CHMIN", "CHMAX", "Performance"))
+fix(normalizeset)
+```
+
+```{r}
+cputrain = normalizeset
+```
+```{r}
+cpufit = lm(Performance ~ . , data = cputrain)
+summary(cpufit)
+```
+
+From the above foolowing are the observations:
+we can eliminate the CHMIN and CHMAX as they have higher P - Value
+R- Square and Adj- R- Square are Very high seems like overfit
+
+
+```{r}
+cpufit1 = lm(Performance ~  MMIN +MMAX + CACH  , data = cputrain)
+summary(cpufit1)
+
+```
+
+```{r}
+par(mfrow = c(2, 2)) 
+plot(cpufit) 
+```
+
+```{r}
+par(mfrow = c(2, 2))  
+plot(cpufit1) 
+```
+
+
+
+
+
+```{r}
+cputrain$predicted = predict(cpufit1)
+cputrain$Resudials = residuals(cpufit1)
+```
+
+
+
+```{r}
+library(dplyr)
+cputrain %>% select(Performance, predicted, Resudials) %>%head()
+
+```
+
+```{r}
+library(ggplot2)
+ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance )) +
+  geom_point() 
+```
+
+
+```{r}
+ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance )) +geom_point()+ geom_point(aes(y = predicted), shape = 1) 
+```
+
+
+
+
+```{r}
+ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance ))+ geom_segment(aes(xend = MMIN + MMAX + CACH, yend = predicted), alpha = .5)+geom_smooth(method = "lm", se = FALSE, color = "black") +geom_point(color = "blue")+ geom_point(aes(y = predicted), shape = 1, color =" red") +  theme_bw()
+
+```
+
+
+
+The above is the difference between the actual points Blue and Predicited Points Red and the linear regression lm is show in Black color
+
+```{r}
+barplot(cputrain$Resudials)
+```
+From the above we can see the resudial is somewhat evenly distributed also we can find negative effict which will detect prediction with lower than the actual. which actually better than to have higher performance result and lower performance  in actual.
