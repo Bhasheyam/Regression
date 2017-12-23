@@ -8,20 +8,8 @@ Loading the dataset
 cpu = read.csv(file = "CPUPerformance.csv")
 head(cpu)
 ```
-```{r}
-a = c(1,2,3,4,NA)
-b = c(2,3,4,5,6)
-tes = as.data.frame(a)
-tes$b = b
-tes
-```
 
-```{r}
-tes1 = function(x){
-  is.na(x)
-}
-apply(tes,2,tes1)
-```
+
 
 ```{r}
 nacheck = function(x){
@@ -32,7 +20,7 @@ nacheck = function(x){
 }
 
 apply(cpu,2,nacheck)
-sum(is.na(tes))
+
 ```
 
 
@@ -70,7 +58,6 @@ calculatenorm=function(x){
 }
 
 normalizeset= as.data.frame(lapply(Filter(is.numeric,cpu),calculatenorm))
-normalizeset
 nrow(normalizeset)
 
 ```
@@ -106,12 +93,7 @@ plot(normalizeset$MYCT, normalizeset$MMAX)
 
 
 ```{r}
-fix(normalizeset)
-```
-
-```{r}
 normalizeset = subset(normalizeset,select = c("MMIN","MMAX" ,"CACH","CHMIN", "CHMAX", "Performance"))
-fix(normalizeset)
 ```
 
 ```{r}
@@ -175,7 +157,7 @@ ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance )) +geom_point()+ 
 
 
 ```{r}
-ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance ))+ geom_segment(aes(xend = MMIN + MMAX + CACH, yend = predicted), alpha = .5)+geom_smooth(method = "lm", se = FALSE, color = "black") +geom_point(color = "blue")+ geom_point(aes(y = predicted), shape = 1, color =" red") +  theme_bw()
+ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance ))+ geom_segment(aes(xend = MMIN + MMAX + CACH, yend = predicted), alpha = .5)+geom_smooth(method = "lm", se = FALSE, color = "black") +geom_point(color = "blue")+ geom_point(aes(y = predicted), shape = 1, color =" red") 
 
 ```
 
@@ -187,3 +169,40 @@ The above is the difference between the actual points Blue and Predicited Points
 barplot(cputrain$Resudials)
 ```
 From the above we can see the resudial is somewhat evenly distributed also we can find negative effict which will detect prediction with lower than the actual. which actually better than to have higher performance result and lower performance  in actual.
+
+```{r}
+ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance ))+ geom_segment(aes(xend = MMIN + MMAX + CACH, yend = predicted), alpha = .5)+geom_point(aes(color = abs(Resudials), size = abs(Resudials))) + # size also mapped
+  scale_color_continuous(low = "black", high = "green") +geom_smooth(method = "lm", se = FALSE, color = "black") + geom_point(aes(y = predicted), shape = 1, color =" blue") 
+```
+
+The above plot is visuvialsation of Residuvals 
+
+```{r}
+fix(cputrain)
+```
+
+```{r}
+library("magrittr")
+library("tidyr")
+
+cputrain %>% gather (-Performance,-CHMAX, -CHMIN,-predicted, -Resudials,key = "iv", value = "x" ) %>% 
+  
+  ggplot( aes(x =  x, y = Performance ))+ geom_segment(aes(xend = x, yend = predicted), alpha = .5)+geom_point(aes(color = abs(Resudials), size = abs(Resudials))) + # size also mapped
+  scale_color_continuous(low = "black", high = "green") +geom_smooth(method = "lm", se = FALSE, color = "black") + geom_point(aes(y = predicted), shape = 1, color =" blue") + facet_grid(~ iv , scales = "free_x") 
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+gather(key = "iv", value = "x", -mpg, -predicted, -residuals)
