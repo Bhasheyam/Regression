@@ -1,0 +1,185 @@
+---
+title: "Untitled"
+output: github_document
+author: "Bhasheyam Krishnan"
+---
+
+Loading the dataset
+
+```{r}
+
+energy = read.csv(file = "energydata_complete.csv")
+```
+
+```{r}
+energy[energy == " "] = NA
+```
+
+```{r}
+sum(is.na(energy))
+```
+From the above we can found no Missing values
+```{r}
+summary(energy)
+```
+
+From the above we can observe that all are nuemeric values and Date features is of the type Date.
+
+So lets Process the Date Feature.
+
+
+
+
+```{r}
+head(energy)
+```
+
+
+```{r}
+energy$date <- strptime(as.character(energy$date),format="%Y-%m-%d %H:%M:%S")
+energy$date <- as.POSIXct(energy$date,tz = "America/Chicago")
+head(energy$date)
+```
+
+```{r}
+Sys.timezone()
+```
+
+```{r}
+sum(is.na(energy))
+```
+```{r}
+energy = energy[!is.na(energy$date),]
+
+```
+
+
+```{r}
+library(lubridate)
+seconds = function(x){
+  s <- hour(x)*3600+minute(x)*60+second(x)
+  return(s)
+}
+
+energy$second = seconds(energy$date)
+```
+
+
+```{r}
+energy$month = floor_date(energy$date,"month")
+energy$hour = floor_date(energy$date,"hour")
+```
+
+
+```{r}
+names(energy)
+```
+
+
+
+```{r}
+library(plyr)
+
+energy_data_Total_per_hour <-  ddply(energy, "month", summarise,
+                                     Appliances=sum(Appliances))
+```
+
+
+```{r}
+head(energy)
+```
+```{r}
+energy_data_Total_per_hour
+```
+```{r}
+library(ggplot2)
+ggplot(energy_data_Total_per_hour,aes(x=month,y = Appliances)) +  geom_point(color = "green",size = 12) + theme_dark()
+```
+The above is the we can use the use of the appliance in the 5 months
+
+```{r}
+library(plyr)
+energy_data_Total_per_hour_1 = ddply(energy,"hour", summarise,Appliances=sum(Appliances))
+```
+
+```{r}
+library(ggplot2)
+ggplot(energy_data_Total_per_hour_1,aes(x=hour,y = Appliances)) +  geom_point(color = "green",size = 1) + theme_dark()
+```
+
+From the above the use of applicane is almost similar for the months
+on hour basis
+
+```{r}
+library(plyr)
+
+energy_data_Total_light_per_hour <-  ddply(energy, "month", summarise,
+                                     lights=sum(lights))
+```
+
+
+
+```{r}
+library(ggplot2)
+ggplot(energy_data_Total_light_per_hour,aes(x=month,y = lights)) +  geom_point(color = "green") + theme_dark()
+```
+The above is the we can use the use of the appliance in the 5 months
+
+```{r}
+library(plyr)
+energy_data_Total_per_hour_light = ddply(energy,"hour", summarise, lights=sum(lights))
+```
+```{r}
+library(ggplot2)
+ggplot(energy_data_Total_per_hour_light,aes(x=hour,y = lights)) +  geom_point(color = "green",size = 1) + theme_dark()
+```
+
+From the above we can observe the use of the lights is hight initially and decresed in later months
+
+
+since we have more features lets first try to reduce the number of features
+
+
+
+
+```{r}
+str(energy)
+dim(energy)
+names(energy)
+```
+
+
+```{r}
+library(caret)
+energy.lm.fit = train(Appliances~., data=energy[,c(2:29)],  method="lm",
+                 metric='RMSE')
+```
+
+```{r}
+summary(energy.lm.fit)
+```
+From the above we can see few of the features are not statitically significant we can observe from the P - Values
+
+And the Square error is very low which show the poor fit of the model 
+
+
+```{r}
+resudals = resid(energy.lm.fit)
+energy_result = as.data.frame(resudals)
+energy_result$actual = energy$Appliances
+energy_result$predicted = predict(energy.lm.fit)
+```
+```{r}
+plot(energy[2:10])
+```
+
+```{r}
+barplot(energy_result$resudals)
+```
+
+The Residuals is not even and distributed randomly . so the model fit is very poor
+```{r}
+library(ggplot2)
+ggplot(energy_result,aes(x=actual,y=predicted))+geom_point(color = "green") + theme_dark()
+```
+
