@@ -1,0 +1,263 @@
+---
+title: "House - Rent"
+output: github_document
+Author : "Bhasheyam Krishnan"
+---
+
+```{r}
+house_train = read.csv(file = "train.csv")
+house_test = read.csv(file = "test.csv")
+```
+
+```{r}
+dim(house_train)
+```
+
+From the above we can see they are many features and very small amount of instance. 
+
+```{r}
+anyNA(house_train)
+anyNA(house_test)
+```
+
+Both have missing values
+
+```{r}
+sum(is.na(house_train))
+sum(is.na(house_test))
+```
+
+
+We can see there were more missing values missing values
+
+```{r}
+train_miss = colnames(house_train)[colSums(is.na(house_train)) > 0]
+```
+
+
+
+```{r}
+test_miss = colnames(house_test)[colSums(is.na(house_test)) > 0]
+```
+
+```{r}
+for(name1 in train_miss){
+  if(is.numeric(house_train[[name1]])){
+    tempmean = mean(house_train[[name1]], na.rm = TRUE)
+    house_train[[name1]][ is.na(house_train[[name1]])] = tempmean
+    
+  }
+}
+```
+
+
+
+```{r}
+for(name1 in test_miss){
+  if(is.numeric(house_test[[name1]])){
+    tempmean1 = mean(house_test[[name1]], na.rm  = TRUE)
+    print(tempmean1)
+    house_test[[name1]][ is.na(house_test[[name1]])] = tempmean1
+    
+  }
+}
+```
+
+
+```{r}
+sum(is.na(house_train))
+sum(is.na(house_test))
+```
+Now deal with character features adding a level called None
+```{r}
+train_miss1 = colnames(house_train)[colSums(is.na(house_train)) > 0]
+```
+
+
+
+```{r}
+test_miss1 = colnames(house_test)[colSums(is.na(house_test)) > 0]
+```
+
+```{r}
+for(name1 in train_miss1){
+  levels <- levels(house_train[[name1]])
+  if ("None" %in% levels){
+    
+  }
+  else{
+    levels[length(levels) + 1] <- "None"
+  }
+
+house_train[[name1]]  = factor(house_train[[name1]],levels = levels)
+house_train[[name1]][is.na(house_train[[name1]])] = "None"
+
+    
+  
+}
+```
+
+
+
+```{r}
+for(name1 in test_miss1){
+  levels <- levels(house_test[[name1]])
+if ("None" %in% levels){
+    
+  }
+  else{
+    levels[length(levels) + 1] <- "None"
+  }
+
+house_test[[name1]]  = factor(house_test[[name1]],levels = levels)
+house_test[[name1]][is.na(house_test[[name1]])] = "None"
+  
+}
+```
+
+```{r}
+sum(is.na(house_train))
+sum(is.na(house_test))
+```
+
+
+lets clear the year feature
+```{r}
+house_train$GarageYrBlt = as.integer(house_train$GarageYrBlt)
+house_test$GarageYrBlt = as.integer(house_test$GarageYrBlt)
+```
+
+Now lets make the features with level to factors
+
+before that lets remove the features like name, id, street address like common facotrs
+
+
+```{r}
+summary(house_train)
+```
+
+
+
+```{r}
+fix(house_train)
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(house_train, aes(x =OverallQual, y = SalePrice)) + geom_point(color = "green") + theme_dark()
+
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(house_train, aes(x =OverallCond, y = SalePrice)) + geom_point(color = "green") + theme_dark()
+```
+
+
+we can see a un usual price hike in overall condition .average rate seems to have more price.
+
+
+
+```{r}
+library(ggplot2)
+ggplot(house_train, aes(x =YearBuilt, y = SalePrice)) + geom_point(color = "green") + theme_dark()
+```
+from the year we can see the graudual increse, new house has higher rates
+
+```{r}
+library(ggplot2)
+ggplot(house_train, aes(x =Neighborhood, y = SalePrice)) + geom_point(color = "green") + theme_dark() + scale_x_discrete(labels = abbreviate)
+```
+
+the neighbourhood names are not clear but it is importan to know the variation.
+
+```{r}
+library(ggplot2)
+ggplot(house_train, aes(x =YearRemodAdd, y = SalePrice)) + geom_point(color = "green") + theme_dark() 
+```
+
+modified also makes no big different, same as year bulit.
+
+HouseStyle
+```{r}
+library(ggplot2)
+ggplot(house_train, aes(x =HouseStyle, y = SalePrice)) + geom_point(color = "green") + theme_dark() 
+```
+
+ 
+ 
+```{r}
+library(ggplot2)
+ggplot(house_train, aes(x =HouseStyle)) + geom_bar(aes(fill = LandContour)) + theme_dark() 
+```
+
+we can see 1 story and  2story is more prefered. and highly paid. with different land contours
+
+
+
+```{r}
+library(ggplot2)
+ggplot(house_train, aes(x =LotArea, y = SalePrice)) + geom_point(color = "green") + theme_dark() 
+```
+
+
+We can see a linear relation between these two.
+
+
+```{r}
+library(ggplot2)
+ggplot(house_train, aes(x =GarageArea, y = SalePrice)) + geom_point(color = "green") + theme_dark() 
+```
+
+
+GrageArea also have linear relation with the price.
+
+
+
+
+
+
+
+Now we saw many features are numeric, year, and factors. so before we
+
+
+
+```{r}
+library(Boruta)
+house_selection = Boruta(SalePrice ~ . , data = house_train, doTrace = 2)
+```
+
+
+```{r}
+train_selected = getSelectedAttributes(house_selection, withTentative = F)
+train_selected
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
