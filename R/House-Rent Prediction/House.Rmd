@@ -239,8 +239,16 @@ train_selected
 
 
 
+```{r}
+house_train = subset(house_train, select = train_selected )
+house_test = subset(house_test, select = train_selected)
+```
 
 
+```{r}
+summary(house_train)
+
+```
 
 
 
