@@ -10,36 +10,105 @@ head(cpu)
 ```
 
 
-
 ```{r}
-nacheck = function(x){
-  if (is.numeric(x)){
-    mean(x)
-    }
-  
-}
-
-apply(cpu,2,nacheck)
-
+anyNA(cpu)
 ```
 
 
 
-```{r}
-cpu[cpu == ""] = NA
-sum(is.na(cpu))
-sum(is.null(cpu))
-
-```
 the dataset has no NA and missing values
 ```{r}
 summary(cpu)
 ```
-The above is the stat of the datset
+The above are the stats about the data and we see a huge various in the data. so data need to scalled
+
+
+
 ```{r}
 dim(cpu)
 ```
 
+For visualise data lets add index to the data.
+
+```{r}
+ind = c(1:209)
+cpu$index = ind
+```
+
+
+small dataset to with only 209 instance
+
+
+```{r}
+library(ggplot2)
+ggplot(cpu, aes(x = CACH, y = Performance)) + geom_line(color= "blue")+ geom_point(color ="red")+geom_hline(yintercept = mean(cpu$Performance), color = "green") + geom_hline(yintercept = min(cpu$Performance)) +theme_bw()
+```
+
+
+
+Cache range 50 - 150 seems to have some higher perfomance. as most of the cpu are above average
+
+
+```{r}
+library(ggplot2)
+
+ggplot(cpu,aes(index,Performance)) + geom_line(color = "blue", size=1)+  geom_point(color = "red") + geom_hline(yintercept = mean(cpu$Performance), color = "green") + geom_hline(yintercept = min(cpu$Performance)) +theme_bw()
+```
+The above is an over all performance of all the cpu. 
+lets see for each vendors
+
+
+```{r}
+library(ggplot2)
+
+ggplot(cpu,aes(index,Performance, color = Vendor)) + geom_line(size=0.5)+  geom_point() + geom_hline(yintercept = mean(cpu$Performance), color = "green") + geom_hline(yintercept = min(cpu$Performance)) +theme_bw()
+
+```
+
+From the above see vendor Adviser an wang produce CPU with high Performance.
+
+```{r}
+library(ggplot2)
+
+ggplot(cpu,aes(index,MMAX)) + geom_line(color = "blue", size=1)+  geom_point(color = "red") + geom_hline(yintercept = mean(cpu$MMAX), color = "green") + geom_hline(yintercept = min(cpu$MMAX)) +theme_bw()
+```
+
+
+Overall max memory for the cpu.
+
+
+```{r}
+library(ggplot2)
+
+ggplot(cpu,aes(index,MMAX, color = Vendor)) + geom_line(size=0.5)+  geom_point() + geom_hline(yintercept = mean(cpu$MMAX), color = "green") + geom_hline(yintercept = min(cpu$MMAX)) +theme_bw()
+```
+Adviser and wang having max memory as we expected. we can see the relation between mmax and performance.
+
+
+```{r}
+library(ggplot2)
+
+ggplot(cpu,aes(index,CACH)) + geom_line(color = "blue", size=1)+  geom_point(color = "red") + geom_hline(yintercept = mean(cpu$CACH), color = "green") + geom_hline(yintercept = min(cpu$CACH)) +theme_bw()
+```
+
+
+
+
+```{r}
+library(ggplot2)
+
+ggplot(cpu,aes(index,CACH, color = Vendor)) + geom_line(size=0.5)+  geom_point() + geom_hline(yintercept = mean(cpu$CACH), color = "green") + geom_hline(yintercept = min(cpu$CACH)) +theme_bw()
+```
+we can see from above cach is not contributing to the performance of CPU.
+
+```{r}
+library(ggplot2)
+
+ggplot(cpu,aes(index,CHMAX, color = Vendor)) + geom_line(size=0.5)+  geom_point() + geom_hline(yintercept = mean(cpu$CHMAX), color = "green") + geom_hline(yintercept = min(cpu$CHMAX)) +theme_bw()
+```
+we cannot come to conclusion with this stats.
+
+Now lets fit a regression model to see how the data behave 
 
 ```{r}
 boxplot(Filter(is.numeric,cpu))
@@ -87,9 +156,7 @@ cor(normalizeset)
 ```
 
 From the above we can see, we cannot see any feature pair are highly corelated
-```{r}
-plot(normalizeset$MYCT, normalizeset$MMAX)
-```
+
 
 
 ```{r}
@@ -145,13 +212,9 @@ cputrain %>% select(Performance, predicted, Resudials) %>%head()
 ```{r}
 library(ggplot2)
 ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance )) +
-  geom_point() 
+  geom_point(color = "Blue") + theme_bw()
 ```
 
-
-```{r}
-ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance )) +geom_point()+ geom_point(aes(y = predicted), shape = 1) 
-```
 
 
 
@@ -160,7 +223,6 @@ ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance )) +geom_point()+ 
 ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance ))+ geom_segment(aes(xend = MMIN + MMAX + CACH, yend = predicted), alpha = .5)+geom_smooth(method = "lm", se = FALSE, color = "black") +geom_point(color = "blue")+ geom_point(aes(y = predicted), shape = 1, color =" red") 
 
 ```
-
 
 
 The above is the difference between the actual points Blue and Predicited Points Red and the linear regression lm is show in Black color
@@ -177,9 +239,7 @@ ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance ))+ geom_segment(a
 
 The above plot is visuvialsation of Residuvals 
 
-```{r}
-fix(cputrain)
-```
+
 
 ```{r}
 library("magrittr")
@@ -193,6 +253,7 @@ cputrain %>% gather (-Performance,-CHMAX, -CHMIN,-predicted, -Resudials,key = "i
 ```
 
 
+From the above we can see fitting the features seperately and see how it works. all works almost similar. so linear model fitted with these feature may predict the performance of the CPU.
 
 
 
@@ -202,7 +263,3 @@ cputrain %>% gather (-Performance,-CHMAX, -CHMIN,-predicted, -Resudials,key = "i
 
 
 
-
-
-
-gather(key = "iv", value = "x", -mpg, -predicted, -residuals)

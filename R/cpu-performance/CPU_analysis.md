@@ -18,10 +18,30 @@ head(cpu)
     ## 6  amdahl   26 8000 32000   64     8    32         290
 
 ``` r
-anyNA(cpu)
+nacheck = function(x){
+  if (is.numeric(x)){
+    mean(x)
+    }
+  
+}
+
+apply(cpu,2,nacheck)
 ```
 
-    ## [1] FALSE
+    ## NULL
+
+``` r
+cpu[cpu == ""] = NA
+sum(is.na(cpu))
+```
+
+    ## [1] 0
+
+``` r
+sum(is.null(cpu))
+```
+
+    ## [1] 0
 
 the dataset has no NA and missing values
 
@@ -46,7 +66,7 @@ summary(cpu)
     ##  Max.   :256.00   Max.   :52.000   Max.   :176.00   Max.   :1238.00  
     ## 
 
-The above are the stats about the data and we see a huge various in the data. so data need to scalled
+The above is the stat of the datset
 
 ``` r
 dim(cpu)
@@ -54,91 +74,11 @@ dim(cpu)
 
     ## [1] 209   8
 
-For visualise data lets add index to the data.
-
-``` r
-ind = c(1:209)
-cpu$index = ind
-```
-
-small dataset to with only 209 instance
-
-``` r
-library(ggplot2)
-ggplot(cpu, aes(x = CACH, y = Performance)) + geom_line(color= "blue")+ geom_point(color ="red")+geom_hline(yintercept = mean(cpu$Performance), color = "green") + geom_hline(yintercept = min(cpu$Performance)) +theme_bw()
-```
-
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-1.png)
-
-Cache range 50 - 150 seems to have some higher perfomance. as most of the cpu are above average
-
-``` r
-library(ggplot2)
-
-ggplot(cpu,aes(index,Performance)) + geom_line(color = "blue", size=1)+  geom_point(color = "red") + geom_hline(yintercept = mean(cpu$Performance), color = "green") + geom_hline(yintercept = min(cpu$Performance)) +theme_bw()
-```
-
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-7-1.png) The above is an over all performance of all the cpu. lets see for each vendors
-
-``` r
-library(ggplot2)
-
-ggplot(cpu,aes(index,Performance, color = Vendor)) + geom_line(size=0.5)+  geom_point() + geom_hline(yintercept = mean(cpu$Performance), color = "green") + geom_hline(yintercept = min(cpu$Performance)) +theme_bw()
-```
-
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-8-1.png)
-
-From the above see vendor Adviser an wang produce CPU with high Performance.
-
-``` r
-library(ggplot2)
-
-ggplot(cpu,aes(index,MMAX)) + geom_line(color = "blue", size=1)+  geom_point(color = "red") + geom_hline(yintercept = mean(cpu$MMAX), color = "green") + geom_hline(yintercept = min(cpu$MMAX)) +theme_bw()
-```
-
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-9-1.png)
-
-Overall max memory for the cpu.
-
-``` r
-library(ggplot2)
-
-ggplot(cpu,aes(index,MMAX, color = Vendor)) + geom_line(size=0.5)+  geom_point() + geom_hline(yintercept = mean(cpu$MMAX), color = "green") + geom_hline(yintercept = min(cpu$MMAX)) +theme_bw()
-```
-
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-10-1.png) Adviser and wang having max memory as we expected. we can see the relation between mmax and performance.
-
-``` r
-library(ggplot2)
-
-ggplot(cpu,aes(index,CACH)) + geom_line(color = "blue", size=1)+  geom_point(color = "red") + geom_hline(yintercept = mean(cpu$CACH), color = "green") + geom_hline(yintercept = min(cpu$CACH)) +theme_bw()
-```
-
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-11-1.png)
-
-``` r
-library(ggplot2)
-
-ggplot(cpu,aes(index,CACH, color = Vendor)) + geom_line(size=0.5)+  geom_point() + geom_hline(yintercept = mean(cpu$CACH), color = "green") + geom_hline(yintercept = min(cpu$CACH)) +theme_bw()
-```
-
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-12-1.png) we can see from above cach is not contributing to the performance of CPU.
-
-``` r
-library(ggplot2)
-
-ggplot(cpu,aes(index,CHMAX, color = Vendor)) + geom_line(size=0.5)+  geom_point() + geom_hline(yintercept = mean(cpu$CHMAX), color = "green") + geom_hline(yintercept = min(cpu$CHMAX)) +theme_bw()
-```
-
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-13-1.png) we cannot come to conclusion with this stats.
-
-Now lets fit a regression model to see how the data behave
-
 ``` r
 boxplot(Filter(is.numeric,cpu))
 ```
 
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-14-1.png)
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-1.png)
 
 From the above we can see almost every features has some outlier
 
@@ -161,7 +101,7 @@ nrow(normalizeset)
 boxplot(Filter(is.numeric,normalizeset))
 ```
 
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-16-1.png)
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-8-1.png)
 
 ``` r
 summary(normalizeset)
@@ -174,19 +114,19 @@ summary(normalizeset)
     ##  Mean   :0.12598   Mean   :0.08780   Mean   :0.18350   Mean   :0.09846  
     ##  3rd Qu.:0.14026   3rd Qu.:0.12325   3rd Qu.:0.24925   3rd Qu.:0.12500  
     ##  Max.   :1.00000   Max.   :1.00000   Max.   :1.00000   Max.   :1.00000  
-    ##      CHMIN             CHMAX          Performance          index     
-    ##  Min.   :0.00000   Min.   :0.00000   Min.   :0.00000   Min.   :0.00  
-    ##  1st Qu.:0.01923   1st Qu.:0.02841   1st Qu.:0.01063   1st Qu.:0.25  
-    ##  Median :0.03846   Median :0.04545   Median :0.02453   Median :0.50  
-    ##  Mean   :0.09036   Mean   :0.10380   Mean   :0.06895   Mean   :0.50  
-    ##  3rd Qu.:0.11538   3rd Qu.:0.13636   3rd Qu.:0.07032   3rd Qu.:0.75  
-    ##  Max.   :1.00000   Max.   :1.00000   Max.   :1.00000   Max.   :1.00
+    ##      CHMIN             CHMAX          Performance     
+    ##  Min.   :0.00000   Min.   :0.00000   Min.   :0.00000  
+    ##  1st Qu.:0.01923   1st Qu.:0.02841   1st Qu.:0.01063  
+    ##  Median :0.03846   Median :0.04545   Median :0.02453  
+    ##  Mean   :0.09036   Mean   :0.10380   Mean   :0.06895  
+    ##  3rd Qu.:0.11538   3rd Qu.:0.13636   3rd Qu.:0.07032  
+    ##  Max.   :1.00000   Max.   :1.00000   Max.   :1.00000
 
 ``` r
 plot(normalizeset)
 ```
 
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-18-1.png)
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-10-1.png)
 
 ``` r
 normalizeset = normalizeset[normalizeset$CHMAX < 0.50,]
@@ -199,32 +139,36 @@ nrow(normalizeset)
 boxplot(normalizeset)
 ```
 
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-20-1.png)
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-12-1.png)
 
 ``` r
 cor(normalizeset)
 ```
 
-    ##                    MYCT        MMIN        MMAX        CACH       CHMIN
-    ## MYCT         1.00000000 -0.33290350 -0.38996246 -0.33191910 -0.35407763
-    ## MMIN        -0.33290350  1.00000000  0.80257789  0.61035706  0.72249644
-    ## MMAX        -0.38996246  0.80257789  1.00000000  0.55148307  0.64252964
-    ## CACH        -0.33191910  0.61035706  0.55148307  1.00000000  0.59861084
-    ## CHMIN       -0.35407763  0.72249644  0.64252964  0.59861084  1.00000000
-    ## CHMAX       -0.35165150  0.42105707  0.47209676  0.41224472  0.57049932
-    ## Performance -0.29575141  0.92070771  0.87872071  0.67163345  0.74572152
-    ## index       -0.08923967 -0.05003738 -0.03403998  0.04672528 -0.05065647
-    ##                  CHMAX Performance       index
-    ## MYCT        -0.3516515 -0.29575141 -0.08923967
-    ## MMIN         0.4210571  0.92070771 -0.05003738
-    ## MMAX         0.4720968  0.87872071 -0.03403998
-    ## CACH         0.4122447  0.67163345  0.04672528
-    ## CHMIN        0.5704993  0.74572152 -0.05065647
-    ## CHMAX        1.0000000  0.47506140 -0.22730993
-    ## Performance  0.4750614  1.00000000 -0.08078276
-    ## index       -0.2273099 -0.08078276  1.00000000
+    ##                   MYCT       MMIN       MMAX       CACH      CHMIN
+    ## MYCT         1.0000000 -0.3329035 -0.3899625 -0.3319191 -0.3540776
+    ## MMIN        -0.3329035  1.0000000  0.8025779  0.6103571  0.7224964
+    ## MMAX        -0.3899625  0.8025779  1.0000000  0.5514831  0.6425296
+    ## CACH        -0.3319191  0.6103571  0.5514831  1.0000000  0.5986108
+    ## CHMIN       -0.3540776  0.7224964  0.6425296  0.5986108  1.0000000
+    ## CHMAX       -0.3516515  0.4210571  0.4720968  0.4122447  0.5704993
+    ## Performance -0.2957514  0.9207077  0.8787207  0.6716335  0.7457215
+    ##                  CHMAX Performance
+    ## MYCT        -0.3516515  -0.2957514
+    ## MMIN         0.4210571   0.9207077
+    ## MMAX         0.4720968   0.8787207
+    ## CACH         0.4122447   0.6716335
+    ## CHMIN        0.5704993   0.7457215
+    ## CHMAX        1.0000000   0.4750614
+    ## Performance  0.4750614   1.0000000
 
 From the above we can see, we cannot see any feature pair are highly corelated
+
+``` r
+plot(normalizeset$MYCT, normalizeset$MMAX)
+```
+
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-14-1.png)
 
 ``` r
 normalizeset = subset(normalizeset,select = c("MMIN","MMAX" ,"CACH","CHMIN", "CHMAX", "Performance"))
@@ -295,14 +239,14 @@ par(mfrow = c(2, 2))
 plot(cpufit) 
 ```
 
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-26-1.png)
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-19-1.png)
 
 ``` r
 par(mfrow = c(2, 2))  
 plot(cpufit1) 
 ```
 
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-27-1.png)
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-20-1.png)
 
 ``` r
 cputrain$predicted = predict(cpufit1)
@@ -341,16 +285,22 @@ cputrain %>% select(Performance, predicted, Resudials) %>%head()
 ``` r
 library(ggplot2)
 ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance )) +
-  geom_point(color = "Blue") + theme_bw()
+  geom_point() 
 ```
 
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-30-1.png)
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-23-1.png)
+
+``` r
+ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance )) +geom_point()+ geom_point(aes(y = predicted), shape = 1) 
+```
+
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-24-1.png)
 
 ``` r
 ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance ))+ geom_segment(aes(xend = MMIN + MMAX + CACH, yend = predicted), alpha = .5)+geom_smooth(method = "lm", se = FALSE, color = "black") +geom_point(color = "blue")+ geom_point(aes(y = predicted), shape = 1, color =" red") 
 ```
 
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-31-1.png)
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-25-1.png)
 
 The above is the difference between the actual points Blue and Predicited Points Red and the linear regression lm is show in Black color
 
@@ -358,16 +308,20 @@ The above is the difference between the actual points Blue and Predicited Points
 barplot(cputrain$Resudials)
 ```
 
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-32-1.png) From the above we can see the resudial is somewhat evenly distributed also we can find negative effict which will detect prediction with lower than the actual. which actually better than to have higher performance result and lower performance in actual.
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-26-1.png) From the above we can see the resudial is somewhat evenly distributed also we can find negative effict which will detect prediction with lower than the actual. which actually better than to have higher performance result and lower performance in actual.
 
 ``` r
 ggplot(cputrain, aes(x =  MMIN + MMAX + CACH, y = Performance ))+ geom_segment(aes(xend = MMIN + MMAX + CACH, yend = predicted), alpha = .5)+geom_point(aes(color = abs(Resudials), size = abs(Resudials))) + # size also mapped
   scale_color_continuous(low = "black", high = "green") +geom_smooth(method = "lm", se = FALSE, color = "black") + geom_point(aes(y = predicted), shape = 1, color =" blue") 
 ```
 
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-33-1.png)
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-27-1.png)
 
 The above plot is visuvialsation of Residuvals
+
+``` r
+fix(cputrain)
+```
 
 ``` r
 library("magrittr")
@@ -395,6 +349,6 @@ cputrain %>% gather (-Performance,-CHMAX, -CHMIN,-predicted, -Resudials,key = "i
   scale_color_continuous(low = "black", high = "green") +geom_smooth(method = "lm", se = FALSE, color = "black") + geom_point(aes(y = predicted), shape = 1, color =" blue") + facet_grid(~ iv , scales = "free_x") 
 ```
 
-![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-34-1.png)
+![](CPU_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-29-1.png)
 
-From the above we can see fitting the features seperately and see how it works. all works almost similar. so linear model fitted with these feature may predict the performance of the CPU.
+gather(key = "iv", value = "x", -mpg, -predicted, -residuals)
